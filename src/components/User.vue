@@ -115,19 +115,20 @@ const user = {
         }
         let user = {username: this.username, password: this.pwd1}
         fetch(this.$uri + "/user/login", {
+          credentials: 'include',
           method: 'POST', mode: 'cors', headers: {
             'Content-Type': 'application/json',
           }, body: JSON.stringify(user)
         }).then(response => {
-            if (response.ok) {
-              console.log(this.$uri)
-              this.$emit("redirect", "控制台")
-            } else {
-              console.log("not ok!")
-              response.text().then(errorMsg => {
-                this.errorContent = errorMsg
-              })
-            }
+          if (response.ok) {
+            console.log(this.$uri)
+            this.$emit("redirect", "控制台")
+          } else {
+            console.log("not ok!")
+            response.text().then(errorMsg => {
+              this.errorContent = errorMsg
+            })
+          }
         })
       }
     }
