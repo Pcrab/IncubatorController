@@ -83,7 +83,7 @@ body {
 
 #titlebar > span {
   font-size: 2.5em;
-  line-height: 3.5em;
+  /*line-height: 3.5em;*/
 }
 
 </style>
