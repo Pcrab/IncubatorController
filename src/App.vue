@@ -19,6 +19,7 @@ export default {
   components: {User, Incubators, Homepage},
   data() {
     return {
+      // title: "控制台"
       title: ""
     }
   },
