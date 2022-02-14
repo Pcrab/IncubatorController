@@ -7,13 +7,13 @@
       </div>
 
       <div class="input_box">
-        <input v-model="pwd1" type="password" id="password" @blur="checkpwd" required/>
+        <input v-model="pwd1" :type="inputType" id="password" @blur="checkpwd" required/>
         <label for="password">密码</label>
-        <img v-if="!register" alt="toggle password visibility" id="hover" src="../assets/eye_hide.svg"/>
+        <img alt="toggle password visibility" id="hover" @mouseenter="enter" @mouseleave="leave" :src="srcUrl"/>
       </div>
 
       <div class="input_box" v-if="register">
-        <input v-model="pwd2" type="password" id="password-repeat" @blur="checkpwd" required/>
+        <input v-model="pwd2" :type="inputType" id="password-repeat" @blur="checkpwd" required/>
         <label for="password-repeat">重复密码</label>
       </div>
 
@@ -33,12 +33,17 @@
 </template>
 
 <script>
-// console.log(this.$uri)
+import jsSHA from "jssha"
+import show from "../assets/eye_show.svg"
+import hide from "../assets/eye_hide.svg"
+
 const user = {
   name: 'User',
   data() {
     return {
       register: false,
+      srcUrl: hide,
+      inputType: "password",
       errorContent: "",
       username: "",
       pwd1: "",
@@ -59,6 +64,14 @@ const user = {
     },
   },
   methods: {
+    enter() {
+      this.srcUrl = show
+      this.inputType = "text"
+    },
+    leave() {
+      this.srcUrl = hide
+      this.inputType = "password"
+    },
     checkpwd() {
       let hasError = true
       if (this.pwd1 === "" && this.pwd2 === "") {
@@ -96,9 +109,13 @@ const user = {
         if (!isValidUsername(this.username) || !isValidPassword(this.pwd1) || this.pwd1 !== this.pwd2 || !isValidSerialNumber(this.serialNumber)) {
           return
         }
-        fetch(this.$uri + "/user/" + this.username + "/" + this.pwd1 + "/" + this.serialNumber, {
+        let user = {username: this.username, password: this.encrypt(this.pwd1), serialNumber: this.serialNumber}
+        fetch(this.$uri + "/user/create", {
+          credentials: "include",
           method: "POST",
-          mode: "cors"
+          mode: "cors", headers: {
+            "Content-Type": "application/json",
+          }, body: JSON.stringify(user)
         })
             .then(response => {
               if (response.ok) {
@@ -113,7 +130,7 @@ const user = {
         if (!isValidUsername(this.username) || !isValidPassword(this.pwd1)) {
           return
         }
-        let user = {username: this.username, password: this.pwd1}
+        let user = {username: this.username, password: this.encrypt(this.pwd1)}
         fetch(this.$uri + "/user/login", {
           credentials: 'include',
           method: 'POST', mode: 'cors', headers: {
@@ -131,6 +148,13 @@ const user = {
           }
         })
       }
+    },
+    encrypt(string) {
+      const shaObj = new jsSHA("SHA3-512", "TEXT", {encoding: "UTF8"})
+      shaObj.update(string)
+      const result = shaObj.getHash("HEX")
+      console.log(result)
+      return result
     }
   }
 }
