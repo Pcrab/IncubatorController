@@ -18,7 +18,7 @@
       </div>
 
       <div class="input_box" v-if="register">
-        <input v-model="serialNumber" type="text" id="serialNumber" @blur="checkSerialNumber" required/>
+        <input v-model="serialNumber" type="text" id="serialNumber" @blur="checkSerialNumber($event)" required/>
         <label for="serialNumber">序列号</label>
       </div>
 
@@ -89,13 +89,13 @@ const user = {
       chPwdSyntax(hasError)
       this.errorContent = hasError ? "密码格式有误" : ""
     },
-    checkSerialNumber() {
-      let serialNumber = document.getElementById("serialNumber")
+    checkSerialNumber(e) {
+      // let serialNumber = document.getElementById("serialNumber")
       if (!isValidSerialNumber(this.serialNumber) && this.serialNumber !== "") {
         this.errorContent = "序列号格式错误"
-        serialNumber.style.color = "red"
+        e.currentTarget.style.color = "red"
       } else {
-        serialNumber.style.color = "black"
+        e.currentTarget.style.color = "black"
       }
     }
     ,
