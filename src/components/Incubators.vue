@@ -5,6 +5,7 @@
     <div id="info">序列号: {{ serialNumber }}</div>
     <div class="blank"></div>
     <div class="switch">
+      <div v-if="canEdit" id="refresh" class="btn" @click="refreshControl">刷新</div>
       <div>编辑</div>
       <div class="onoffswitch">
         <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" v-model="canEdit"/>
@@ -15,14 +16,14 @@
       </div>
 
       <div class="blank"></div>
-      <div v-if="canEdit" id="refresh" class="btn" @click="refreshControl" style="cursor:pointer;">刷新</div>
-      <div id="logout" class="btn" @click="logout" style="cursor:pointer;">登出</div>
+      <div id="logout" class="btn" @click="logout">登出</div>
     </div>
   </div>
 
   <div v-if="!canEdit">
     <div v-for="incubator in incubators" :key="incubator.id" class="incubatorGroup">
-      <div v-for="(value, key) in incubator" :key="key">
+      <div v-for="(value, key) in incubator" :key="key"
+           v-show="(incubator.mode === 0 && key !== 'dust') || (incubator.mode === 1 && key !== 'water')">
         {{ incubatorWord[key][0] }}: &nbsp;
         {{ incubatorValue(key, value) }}
         {{ incubatorWord[key][1] }}
@@ -30,19 +31,24 @@
     </div>
   </div>
   <div v-else>
-    <div v-for="incubatorControl in incubatorControls" :key="incubatorControl.id" class="incubatorGroup">
-      <div v-for="(value, key) in incubatorControl" :key="key">
+    <div v-for="incubatorControl in incubatorControls" :key="incubatorControl.id" class="incubatorGroup control">
+      <div v-for="(value, key) in incubatorControl" :key="key"
+           v-show="!(incubators[parseInt(incubatorControl.id)].mode === 0 && key === 'dust')">
         {{ incubatorControlWord[key][0] }}: &nbsp;
         <div v-if="key !== 'id' && key !== 'light' && key !== 'dust'"
              @click="changeValue(key, value, incubatorControl.id, '--')" class="opt double">--
         </div>
+        <div v-else-if="key !== 'id'" class="double blankopt"></div>
         <div v-if="key !== 'id'" @click="changeValue(key, value, incubatorControl.id, '-')" class="opt single">-</div>
-        {{ incubatorControlValue(key, value) }}
-        {{ incubatorControlWord[key][1] }}
+        <div>
+          {{ incubatorControlValue(key, value) }}
+          {{ incubatorControlWord[key][1] }}
+        </div>
         <div v-if="key !== 'id'" @click="changeValue(key, value, incubatorControl.id, '+')" class="opt single">+</div>
         <div v-if="key !== 'id' && key !== 'light' && key !== 'dust'"
              @click="changeValue(key, value, incubatorControl.id, '++')" class="opt double">++
         </div>
+        <div v-else-if="key !== 'id'" class="double blankopt"></div>
       </div>
     </div>
     <div class="btn submit" @click="submit">确认修改</div>
@@ -65,21 +71,23 @@ export default {
         "co2": ["二氧化碳", "ppm"],
         "dust": ["土壤湿度", ""],
         "light": ["光照强度", ""],
-        "water": ["水量", ""],
+        "water": ["水位", ""],
         "pi": ["PI膜", ""],
         "fan1": ["风扇1", ""],
         "fan2": ["风扇2", ""],
         "pump": ["水泵", ""],
         "beep": ["蜂鸣器", ""],
         "led": ["灯光", ""],
+        "time": ["开始时间", ""],
       },
       incubatorControls: {},
       incubatorControlWord: {
         "id": ["ID", ""],
         "temperatureLow": ["最低温度", "°C", 0, 40, 1, 0.1],
         "temperatureHigh": ["最高温度", "°C", 0, 40, 1, 0.1],
-        "light": ["光照强度阈值", "", 0, 1, "低", "高"],
-        "dust": ["土壤湿度阈值", "", 0, 1, "低", "高"],
+        "light": ["光照强度", "", 0, 1, "低", "高"],
+        "dust": ["土壤湿度", "", 0, 1, "低", "高"],
+        "days": ["培养天数", "天", 0, 1, "7", "10"],
       },
       clk: 0,
     }
@@ -93,6 +101,26 @@ export default {
         } else {
           return "土培"
         }
+      } else if (key === "light") {
+        if (value === false) {
+          return "明亮"
+        } else {
+          return "昏暗"
+        }
+      } else if (key === "dust") {
+        if (value === false) {
+          return "湿润"
+        } else {
+          return "干燥"
+        }
+      } else if (key === "water") {
+        if (value === 0) {
+          return "缺水"
+        } else if (value === 1) {
+          return "适宜"
+        } else if (value === 11) {
+          return "水满"
+        }
       } else if (value === false) {
         return "关闭"
       } else if (value === true) {
@@ -101,7 +129,7 @@ export default {
       return value
     },
     incubatorControlValue(key, value) {
-      if (key === "light" || key === "dust") {
+      if (key === "light" || key === "dust" || key === "days") {
         return this.incubatorControlWord[key][value + 4]
       }
       return value
@@ -162,7 +190,8 @@ export default {
           throw new Error("")
         }
         if (incubatorControl.dust < 0 || incubatorControl.dust > 1 ||
-            incubatorControl.light < 0 || incubatorControl.light > 1) {
+            incubatorControl.light < 0 || incubatorControl.light > 1 ||
+            incubatorControl.days < 0 || incubatorControl.days > 1) {
           throw new Error("")
         }
       })
@@ -263,7 +292,7 @@ export default {
 .onoffswitch-inner:before {
   content: "ON";
   padding-left: 8px;
-  background-color: #4FACDB;
+  background-color: #85B8CB;
   color: #FFFFFF;
   text-align: left;
 }
@@ -271,7 +300,7 @@ export default {
 .onoffswitch-inner:after {
   content: "OFF";
   padding-right: 8px;
-  background-color: #F50E4C;
+  background-color: #FE7773;
   color: #FAFAFA;
   text-align: right;
 }
@@ -301,14 +330,23 @@ export default {
 
 @media (max-width: 768px) {
   .toolbar {
-    flex-direction: column;
   }
+
+  .incubatorGroup {
+    height: 20em;
+  }
+
 }
 
 @media (min-width: 768px) {
   .toolbar {
     flex-direction: row;
   }
+
+  .incubatorGroup {
+    height: 13em;
+  }
+
 }
 
 .toolbar {
@@ -339,13 +377,36 @@ export default {
   flex: 1;
 }
 
+.btn {
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 0 0.5em;
+  transition: all 0.2s ease-in 0s;
+}
+
 .btn:hover {
-  background-color: #000000;
+  background-color: #D1DDDB;
 }
 
 .incubatorGroup {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
+  padding: 0.5em 2em 0.1em 2em;
+  margin-bottom: 1em;
+  border: 2px solid #283B42;
+  border-radius: 20px;
+
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07),
+  0 2px 4px rgba(0, 0, 0, 0.07),
+  0 4px 8px rgba(0, 0, 0, 0.07),
+  0 8px 16px rgba(0, 0, 0, 0.07),
+  0 16px 32px rgba(0, 0, 0, 0.07),
+  0 32px 64px rgba(0, 0, 0, 0.07);
+}
+
+.control {
+  height: 16em;
 }
 
 .incubatorGroup > div {
@@ -357,21 +418,27 @@ export default {
 
 .opt {
   margin: 0 0.3em;
-  border-radius: 10px;
+  border-radius: 5px;
   border: 1px solid #000000;
   font-weight: bold;
+  width: 2em;
+  line-height: calc(2em - 2px);
 }
 
-.single {
-  width: 1.2em;
+.blankopt {
+  width: 2em;
+  margin: 0 0.3em;
+  border: 1px solid #ffffff;
 }
 
-.double {
-  width: 1.8em;
+.double + .single + div {
+  width: 5em;
+  text-align: center;
 }
 
 .submit {
-  width: 50%;
+  margin: 1em auto auto;
+  padding: 0.5em 1em;
+  width: 10em;
 }
-
 </style>
