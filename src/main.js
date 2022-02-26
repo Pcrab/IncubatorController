@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 
-const uri = "http://127.0.0.1"
+const uri = "https://incubator.pcrab.xyz"
 let app = createApp(App)
 app.config.globalProperties.$uri = uri
 app.mount('#app')
