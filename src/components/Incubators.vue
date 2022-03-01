@@ -5,9 +5,6 @@
     <div id="info">序列号: {{ serialNumber }}</div>
     <div class="blank"></div>
     <div class="switch">
-      <div v-if="canEdit" id="refresh" class="btn" @click="refreshControl">
-        刷新
-      </div>
       <div>编辑</div>
       <div class="onoffswitch">
         <input
@@ -23,16 +20,21 @@
         </label>
       </div>
 
+      <div v-if="canEdit" id="refresh" class="btn" @click="refreshControl">
+        刷新
+      </div>
+      <div v-else class="btn"></div>
+
       <div class="blank"></div>
       <div id="logout" class="btn" @click="logout">登出</div>
     </div>
   </div>
 
-  <div v-if="!canEdit">
+  <div v-if="!canEdit" class="outer">
     <div
       v-for="incubator in incubators"
       :key="incubator.id"
-      class="incubatorGroup"
+      class="incubatorGroup data"
     >
       <div
         v-for="(value, key) in incubator"
@@ -41,6 +43,7 @@
           (incubator.mode === 0 && key !== 'dust') ||
           (incubator.mode === 1 && key !== 'water')
         "
+        class="item"
       >
         {{ incubatorWord[key][0] }}: &nbsp;
         {{ incubatorValue(key, value) }}
@@ -48,7 +51,7 @@
       </div>
     </div>
   </div>
-  <div v-else>
+  <div v-else class="outer">
     <div
       v-for="incubatorControl in incubatorControls"
       :key="incubatorControl.id"
@@ -63,10 +66,13 @@
             key === 'dust'
           )
         "
+        class="item"
       >
         {{ incubatorControlWord[key][0] }}: &nbsp;
         <div
-          v-if="key !== 'id' && key !== 'light' && key !== 'dust'"
+          v-if="
+            key !== 'id' && key !== 'light' && key !== 'dust' && key !== 'days'
+          "
           @click="changeValue(key, value, incubatorControl.id, '--')"
           class="opt double"
         >
@@ -92,7 +98,9 @@
           +
         </div>
         <div
-          v-if="key !== 'id' && key !== 'light' && key !== 'dust'"
+          v-if="
+            key !== 'id' && key !== 'light' && key !== 'dust' && key !== 'days'
+          "
           @click="changeValue(key, value, incubatorControl.id, '++')"
           class="opt double"
         >
@@ -135,7 +143,7 @@ export default {
         id: ["ID", ""],
         temperatureLow: ["最低温度", "°C", 0, 40, 1, 0.1],
         temperatureHigh: ["最高温度", "°C", 0, 40, 1, 0.1],
-        light: ["光照强度", "", 0, 1, "低", "高"],
+        light: ["光照强度", "", 0, 1, "高", "低"],
         dust: ["土壤湿度", "", 0, 1, "低", "高"],
         days: ["培养天数", "天", 0, 1, "7", "10"],
       },
@@ -397,25 +405,68 @@ export default {
   right: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 734px) {
+  .toolbar {
+    width: 80%;
+    flex-direction: column;
+  }
+
+  .outer {
+    width: 95%;
+  }
+
   .incubatorGroup {
-    height: 20em;
+    padding: 0.7em 1em 0.3em;
+  }
+
+  .item {
+    font-size: 0.9em;
+    height: 2em;
+    line-height: 2em;
   }
 }
 
-@media (min-width: 768px) {
+@media (min-width: 735px) {
   .toolbar {
+    width: 100%;
     flex-direction: row;
   }
 
+  .outer {
+    width: 85%;
+  }
+
   .incubatorGroup {
-    height: 13em;
+    padding: 0.6em 2em 0.2em;
+  }
+
+  .item {
+    font-size: 1em;
+    line-height: 1em;
+  }
+}
+
+@media (max-width: 1299px) {
+  .item {
+    width: 100%;
+  }
+  .control .item {
+    justify-content: center;
+  }
+}
+
+@media (min-width: 1300px) {
+  .item {
+    width: 50%;
+  }
+  .control .item {
+    justify-content: left;
   }
 }
 
 .toolbar {
   display: flex;
-  margin: 20px 0;
+  margin: 20px auto;
 }
 
 .toolbar > div {
@@ -442,6 +493,7 @@ export default {
 }
 
 .btn {
+  width: 4em;
   cursor: pointer;
   border-radius: 10px;
   padding: 0 0.5em;
@@ -454,9 +506,8 @@ export default {
 
 .incubatorGroup {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   flex-wrap: wrap;
-  padding: 0.5em 2em 0.1em 2em;
   margin-bottom: 1em;
   border: 2px solid #283b42;
   border-radius: 20px;
@@ -466,18 +517,32 @@ export default {
     0 16px 32px rgba(0, 0, 0, 0.07), 0 32px 64px rgba(0, 0, 0, 0.07);
 }
 
-.control {
-  height: 16em;
+.outer {
+  margin: 0 auto;
 }
 
-.incubatorGroup > div {
+.item {
   display: flex;
-  height: 2em;
-  line-height: 2em;
   margin-bottom: 0.5em;
 }
 
+.data .item {
+  width: 50%;
+}
+
+.incubatorGroup > div:first-child {
+  width: 100%;
+  justify-content: left;
+  margin-bottom: 0.25em;
+  font-size: 1.3em;
+}
+
+.data > div:last-child {
+  width: 100%;
+}
+
 .opt {
+  width: 2em;
   margin: 0 0.3em;
   border-radius: 5px;
   border: 1px solid #000000;
@@ -494,6 +559,7 @@ export default {
 .double + .single + div {
   width: 5em;
   text-align: center;
+  line-height: 2em;
 }
 
 .submit {

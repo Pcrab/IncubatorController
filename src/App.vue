@@ -19,8 +19,8 @@ export default {
   components: { User, Incubators, Homepage },
   data() {
     return {
-      title: "登录",
-      // title: "",
+      // title: "登录",
+      title: "",
     };
   },
   computed: {
